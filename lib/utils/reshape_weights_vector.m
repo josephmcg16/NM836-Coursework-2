@@ -5,6 +5,6 @@ function W = reshape_weights_vector(Weights, n_input, n_hidden, n_output)
 
 W = cell(2, 1);
 W{1} = reshape(Weights(1 : (n_input+1)*n_hidden), n_hidden, n_input+1);
-W{2} = reshape(Weights(n_output*n_hidden+1 : end), n_output, n_hidden+1);
+W{2} = reshape(Weights((n_input+1)*n_hidden+1 : end), n_output, n_hidden+1);
 
 end

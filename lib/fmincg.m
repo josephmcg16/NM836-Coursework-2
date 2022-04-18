@@ -1,4 +1,4 @@
-function [X, fX, i] = fmincg(f,X,options,P1,P2,P3,P4,P5)
+function [X, fX, i] = fmincg(f,X,options)
 %% function min conjugate gradient descent
 if exist('options', 'var') && ~isempty(options) && isfield(options, 'MaxIter')
     length = options.MaxIter;
