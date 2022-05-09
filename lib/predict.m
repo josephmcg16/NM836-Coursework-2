@@ -1,27 +1,36 @@
-function [h, z, a] = predict(X, W, act_fun)
+function [y_hat, a, z] = predict(X, W, act_fun)
 %%hyp - calculates the output of a neural network for multiple samples
 % inputs:
 %           W - cell array of weights matrices for each layer
 %           X - matrix of training samples (input layer neurons)
 %           act_fun - nonlinear activation function
 % ouputs:
-%           h - output layer neurons (prediction) for each training sample
+%           y_hat - output layer neurons (prediction) for each training sample
+%           a - cell array of activation neurons (unit values) for each
+%           layer for each training sample
+%           z - cell array of linear mapping neurons (unit values) for each layer for
+%           each training sample
 addpath('lib/activations')
 %% activation functions
 if act_fun == "sigmoid"
     phi = @sigmoid;
-elseif act_fun == "relu"
-    phi = @relu;
 end
 
 %% feed-forward network
-% first hidden-layer
-z{1} = [ones(size(X, 1), 1), X] * W{1}';
-a{1} = phi(z{1});
+% first layer
+b{1} = ones(size(X, 1), 1);
+a{1} = [b{1}, X];
+
+% hidden layer
+b{2} = ones(size(X, 1), 1);  % bias term
+z{2} = [b{2}, a{1} * W{1}'];  % linear mapping
+a{2} = phi(z{2});  % activation units
 
 % output-layer
-z{2} = [ones(size(a{1}, 1), 1), a{1}] * W{2}';
-a{2} = phi(z{2});
-h = a{2};
+z{3} = a{2} * W{2}';  % linear mapping
+a{3} = z{3};  % identify function
+
+% network prediction
+y_hat = a{3};
 
 end

@@ -4,49 +4,44 @@ function [J, grad] = nnCostFunction(Weights, n_input, n_hidden, n_output, X, y, 
 % 'predict.m' function handles network prediction and includes the biases
 % automatically
 addpath('lib/utils', 'lib/activations')
-%% reshape Weights vector into cell array
+%% init
+n = size(X, 1);  % num training samples
+m = length(Weights);
+
 W = reshape_weights_vector(Weights, n_input, n_hidden, n_output);
+[y_hat, a, z] = predict(X, W, act_fun);  % feed-forward propogation
 
-%% Cost Function
-[h, z, a] = predict(X, W, act_fun);  % feed-forward NN prediction
+%% Cost Function - L2 Regularised with Quadratic Loss
+L = 1/2 * (y-y_hat).^2;  % loss function
+J = 1/n * sum(L) + lambda/m * sum(Weights .^2);  % network cost
 
-J = (1/size(X, 1)) * sum(sum(-y .* log(h) - (1-y) .* log(1 - h))) ...
-    + lambda/(2*length(Weights)) * sum(Weights .^2);
-
-%% Cost Function gradient
-% definately a better way to do this vectorised. This works for now though.
+%% Cost Function gradient - backwards propogation
+% init
 if act_fun == "sigmoid"
+    phi = @sigmoid;  % hidden layer activation
     phi_grad = @sigmoid_grad;
-elseif act_fun == "relu"
-    phi_grad = @relu_grad;
 end
 
+m1 = length(W{1}(:));
+m2 = length(W{2}(:));
 
-dJdaL = y./h - (1-y)./(1-h);
+grad_loss = zeros(n, m);
 
-dJdW1 = zeros(size(X, 1), size(W{1}, 1), size(W{1}, 2));
-for j = 1:1:size(W{1}, 1)
-    for k = 1:size(W{1}, 2)
-        if k == 1
-                dJdW1(:, j, k) = phi_grad(z{1}(:, j)) .* sum(ones(size(X, 1), size(W{2}, 1)) .* W{2}(:, k)' .* phi_grad(z{2}) .* dJdaL, 2);
-        else
-            dJdW1(:, j, k) = X(:, k-1) .* phi_grad(z{1}(:, j))  .* sum(ones(size(X, 1), size(W{2}, 1)) .* W{2}(:, k)' .* phi_grad(z{2}) .* dJdaL, 2);
-        end
+% loss gradient wrt W{1}
+% TODO: vectorise these loops
+% http://cs231n.stanford.edu/slides/2018/cs231n_2018_ds02.pdf
+for i = 1:n_input+1
+    for j = 1:n_hidden
+        index = n_hidden * (i-1) + j;
+        grad_loss(:, index) = - (y-y_hat) .* W{2}(j) .* phi_grad(z{2}(:, j)) .* a{1}(:, i);
     end
 end
-dJdW1 = sum(dJdW1);
 
-dJdW2 = zeros(size(X, 1), size(W{2}, 1), size(W{2}, 2));
-for j = 1:1:size(W{2}, 1)
-    for k = 1:size(W{2}, 2)
-        if k == 1
-            dJdW2(:, j, k) = phi_grad(z{2}(:, j)) .* dJdaL(:, j);
-        else
-            dJdW2(:, j, k) = a{1}(:, k-1) .* phi_grad(z{2}(:, j)) .* dJdaL(:, j);
-        end
-    end
-end
-dJdW2 = sum(dJdW2);
+% loss gradient wrt W{2}
+grad_loss(:, 1+m1:end) = -(y-y_hat) .* a{2};
 
-grad = [dJdW1(:); dJdW2(:)] + (lambda / length(Weights)) .* Weights;
-end
+% overall (regularised) cost gradient
+grad = (1/n)*sum(grad_loss)' + lambda/m .* Weights;
+
+
+
