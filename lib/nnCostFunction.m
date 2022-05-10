@@ -33,9 +33,9 @@ grad_loss = zeros(n, m);
 for i = 1:n_input+1
     for j = 1:n_hidden
         index = n_hidden * (i-1) + j;
-        grad_loss(:, index) = - (y-y_hat) .* W{2}(j) .* phi_grad(z{2}(:, j)) .* a{1}(:, i);
+        grad_loss(:, index) = - (y-y_hat) .* W{2}(j+1) .* phi_grad(z{2}(:, j+1)) .* a{1}(:, i);
     end
-end
+end  
 
 % loss gradient wrt W{2}
 grad_loss(:, m1+1:end) = -(y-y_hat) .* a{2};
