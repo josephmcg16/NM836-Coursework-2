@@ -38,7 +38,7 @@ for i = 1:n_input+1
 end
 
 % loss gradient wrt W{2}
-grad_loss(:, 1+m1:end) = -(y-y_hat) .* a{2};
+grad_loss(:, m1+1:end) = -(y-y_hat) .* a{2};
 
 % overall (regularised) cost gradient
 grad = (1/n)*sum(grad_loss)' + lambda/m .* Weights;
