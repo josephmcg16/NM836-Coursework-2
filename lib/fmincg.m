@@ -137,4 +137,3 @@ while i < abs(length)                                       % while not finished
         ls_failed   = 1;                                    % this line search failed
     end
 end
-fprintf('\n');
