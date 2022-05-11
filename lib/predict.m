@@ -11,12 +11,12 @@ function [y_hat, a, z] = predict(X, W, act_fun)
 %           z - cell array of linear mapping neurons (unit values) for each layer for
 %           each training sample
 addpath('lib/activations')
-%% activation functions
+%% ACTIVATION FUNCTION
 if act_fun == "sigmoid"
     phi = @sigmoid;
 end
 
-%% feed-forward network
+%% FEED-FORWARD NETWOR
 % first layer
 b{1} = ones(size(X, 1), 1);
 a{1} = [b{1}, X];
