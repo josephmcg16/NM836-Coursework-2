@@ -1,47 +1,75 @@
-function [J, grad] = nnCostFunction(Weights, n_input, n_hidden, n_output, X, y, lambda, act_fun)
+function [cost, grad_cost] = nnCostFunction( ...
+    w_vec, X, y, lmd, act_fun, layers)
 %%NNCOSTFUNCTION - Tikhonov variation of the regularised cost function...
 %... for an ANN with 1 hidden layer.
-% 'predict.m' function handles network prediction and includes the biases
-% automatically
-addpath('lib/utils', 'lib/activations')
-%% init
-n = size(X, 1);  % num training samples
-m = length(Weights);
 
-W = reshape_weights_vector(Weights, n_input, n_hidden, n_output);
-[y_hat, a, z] = predict(X, W, act_fun);  % feed-forward propogation
+%% INIT -------------------------------------------------------------------
+addpath('lib', 'lib/activations', 'lib/utils')
 
-%% Cost Function - L2 Regularised with Quadratic Loss
-L = 1/2 * (y-y_hat).^2;  % loss function
-J = 1/n * sum(L) + lambda/m * sum(Weights .^2);  % network cost
+n = size(X, 1);                                 % num training samples
+W = reshape_weights_vector(w_vec, layers);      % get weights matrices
+n_layers = length(layers);
 
-%% Cost Function gradient - backwards propogation
-% init
+% do not do regularisation for biases
+inds_bias = [1:layers(2), layers(2)*(layers(1)+1)+1:layers(2)* ...
+    (layers(1)+1)+layers(3)];
+I = true(length(w_vec), 1);
+I(inds_bias) = 0;
+
+m = length(w_vec) - length(inds_bias);
+
+% activation function
 if act_fun == "sigmoid"
-    phi = @sigmoid;  % hidden layer activation
-    phi_grad = @sigmoid_grad;
+    phi = @sigmoid;
 end
 
-m1 = length(W{1}(:));
-m2 = length(W{2}(:));
+%% FORWARD PROPOGATION ----------------------------------------------------
+% init
+a = cell(1, n_layers);
+z = cell(1, n_layers);
 
-grad_loss = zeros(n, m);
+% first layer
+b = ones(size(X, 1), 1);  % bias term
+a{1} = [b, X];
+
+% hidden layer
+z{2} = a{1} * W{1}';  % linear mapping
+[phi_z2, phi_grad_z2] = phi(z{2});
+a{2} = [b, phi_z2];  % activation units
+% output-layer
+z{3} = a{2} * W{2}';  % linear mapping (identity)
+a{3} = z{3};  % identify function
+
+% network output
+y_hat = a{3};
+
+%% NEURAL NETWORK COST FUNCTION - L2 REGULARISED MSE ----------------------
+cost = 1/(2*n) * sum((y-y_hat).^2) + ...
+       lmd/m * sum(w_vec .* I .^2);
+
+%% BACKWARDS PROPOGATION --------------------------------------------------
+% init
+grad_loss = zeros(n, length(w_vec));
 
 % loss gradient wrt W{1}
-% TODO: vectorise these loops
-% http://cs231n.stanford.edu/slides/2018/cs231n_2018_ds02.pdf
-for i = 1:n_input+1
-    for j = 1:n_hidden
-        index = n_hidden * (i-1) + j;
-        grad_loss(:, index) = - (y-y_hat) .* W{2}(j+1) .* phi_grad(z{2}(:, j+1)) .* a{1}(:, i);
+for i = 1:size(W{1}, 2)
+    for j = 1:size(W{1}, 1)
+        index = size(W{1}, 1) * (i-1) + j;
+        grad_loss(:, index) = - (y-y_hat) .* W{2}(j+1) .* ...
+                              phi_grad_z2(:, j) .* a{1}(:, i);
     end
 end  
 
 % loss gradient wrt W{2}
-grad_loss(:, m1+1:end) = -(y-y_hat) .* a{2};
+grad_loss(:, length(W{1}(:))+1:end) = -(y-y_hat) .* a{2};
 
-% overall (regularised) cost gradient
-grad = (1/n)*sum(grad_loss)' + lambda/m .* Weights;
+% regularised cost gradient
 
+% boolean array, 0 when bias weight, 1 otherwise
+I = true(length(w_vec), 1);
+I(inds_bias) = 0;
 
+grad_cost = (1/n)*sum(grad_loss)' + ...
+            lmd/m .* w_vec .* I;
 
+return

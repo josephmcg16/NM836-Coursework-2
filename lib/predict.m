@@ -1,36 +1,41 @@
-function [y_hat, a, z] = predict(X, W, act_fun)
-%%hyp - calculates the output of a neural network for multiple samples
-% inputs:
-%           W - cell array of weights matrices for each layer
-%           X - matrix of training samples (input layer neurons)
-%           act_fun - nonlinear activation function
-% ouputs:
-%           y_hat - output layer neurons (prediction) for each training sample
-%           a - cell array of activation neurons (unit values) for each
-%           layer for each training sample
-%           z - cell array of linear mapping neurons (unit values) for each layer for
-%           each training sample
-addpath('lib/activations')
-%% activation functions
+function y_hat = predict(X, W, act_fun, layers)
+%%PREDICT feed-forward neural network outputs
+% Inputs:
+%       W               - cell array of weights matrices for each layer
+%       X               - matrix of training samples (input layer neurons)
+%       act_fun         - nonlinear activation function
+%       layers          - array containing number of units in each ...
+%                         layer (not including biases)
+% Ouputs:
+%       y_hat   - output layer neurons (prediction) for each training ...
+%                 ... sample
+%
+%% INIT -------------------------------------------------------------------
+addpath('lib', 'lib/activations', 'lib/utils')
+n_layers = length(layers);
+
+% activation function
 if act_fun == "sigmoid"
     phi = @sigmoid;
 end
 
-%% feed-forward network
+%% FORWARD PROPOGATION ----------------------------------------------------
+% init
+a = cell(1, n_layers);
+z = cell(1, n_layers);
+
 % first layer
-b{1} = ones(size(X, 1), 1);
-a{1} = [b{1}, X];
+b = ones(size(X, 1), 1);  % bias term
+a{1} = [b, X];
 
 % hidden layer
-b{2} = ones(size(X, 1), 1);  % bias term
-z{2} = [b{2}, a{1} * W{1}'];  % linear mapping
-a{2} = phi(z{2});  % activation units
-
+z{2} = a{1} * W{1}';  % linear mapping
+a{2} = [b, phi(z{2})];  % activation units
 % output-layer
-z{3} = a{2} * W{2}';  % linear mapping
+z{3} = a{2} * W{2}';  % linear mapping (identity)
 a{3} = z{3};  % identify function
 
-% network prediction
+% network output
 y_hat = a{3};
 
 end

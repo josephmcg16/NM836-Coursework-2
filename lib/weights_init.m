@@ -14,5 +14,3 @@ for l = 1:length(layers)-1
     end
     w_vec = [w_vec; W{l}(:)];
 end
-
-% reshape cell of matrices for each layer into a tall vector
