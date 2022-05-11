@@ -1,47 +1,27 @@
-function [J, grad] = nnCostFunction(Weights, n_input, n_hidden, n_output, X, y, lambda, act_fun)
+function [cost, grad_cost] = nnCostFunction( ...
+    w_vec, X, y, lmd, act_fun, layers)
 %%NNCOSTFUNCTION - Tikhonov variation of the regularised cost function...
 %... for an ANN with 1 hidden layer.
+%
 % 'predict.m' function handles network prediction and includes the biases
 % automatically
-addpath('lib/utils', 'lib/activations')
-%% init
-n = size(X, 1);  % num training samples
-m = length(Weights);
 
-W = reshape_weights_vector(Weights, n_input, n_hidden, n_output);
-[y_hat, a, z] = predict(X, W, act_fun);  % feed-forward propogation
+%% INIT -------------------------------------------------------------------
+n = size(X, 1);                                 % num training samples
+m = length(w_vec);
+W = reshape_weights_vector(w_vec, layers);        % get weights matrices
 
-%% Cost Function - L2 Regularised with Quadratic Loss
-L = 1/2 * (y-y_hat).^2;  % loss function
-J = 1/n * sum(L) + lambda/m * sum(Weights .^2);  % network cost
+%% FORWARD PROPOGATION ----------------------------------------------------
+[y_hat, a, z] = predict(X, W, act_fun, layers);
 
-%% Cost Function gradient - backwards propogation
-% init
-if act_fun == "sigmoid"
-    phi = @sigmoid;  % hidden layer activation
-    phi_grad = @sigmoid_grad;
-end
+%% NEURAL NETWORK COST FUNCTION - L2 REGULARISED MSE ----------------------
+inds_bias = [1:layers(2), layers(2)*(layers(1)+1)+1:layers(2)* ...
+    (layers(1)+1)+layers(3)];
+cost = 1/(2*n) * sum((y-y_hat).^2) + ...
+       lmd/m * sum(w_vec(setdiff(1:end, inds_bias)) .^2);
 
-m1 = length(W{1}(:));
-m2 = length(W{2}(:));
+%% BACKWARDS PROPOGATION --------------------------------------------------
+[grad_cost] = backprop( ...
+    y_hat, W, w_vec, z, a, y, act_fun, lmd, n, m, inds_bias);
 
-grad_loss = zeros(n, m);
-
-% loss gradient wrt W{1}
-% TODO: vectorise these loops
-% http://cs231n.stanford.edu/slides/2018/cs231n_2018_ds02.pdf
-for i = 1:n_input+1
-    for j = 1:n_hidden
-        index = n_hidden * (i-1) + j;
-        grad_loss(:, index) = - (y-y_hat) .* W{2}(j+1) .* phi_grad(z{2}(:, j+1)) .* a{1}(:, i);
-    end
-end  
-
-% loss gradient wrt W{2}
-grad_loss(:, m1+1:end) = -(y-y_hat) .* a{2};
-
-% overall (regularised) cost gradient
-grad = (1/n)*sum(grad_loss)' + lambda/m .* Weights;
-
-
-
+return
