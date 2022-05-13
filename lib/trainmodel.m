@@ -51,7 +51,7 @@ for i = 1:size(DOE, 1)
         Xva = Xtr(va_inds, :);
 
         yle = ytr(le_inds);
-        y_va = ytr(va_inds);
+        yva = ytr(va_inds);
         
         % normalize data in the range (0, 1) ------------------------------
         Xle = normalize(Xle,"range");
@@ -70,8 +70,12 @@ for i = 1:size(DOE, 1)
         y_hat = y_hat * y_scaleValue + y_centerValue;  % denormalize
         
         % aggregate error for each leaning / validation split--------------
-        err = err + mse(y_hat, y_va);
+        err = err + mse(y_hat, yva);
+%         fprintf("Inner Split : %i \n", j)
     end
+
+%     fprintf("Sum Err : %3.3f \tlmd : %3.3E \t s2 : %3.3f \n\n", ...
+%         err, lmd, layers(2))
     
     % update the best lmd & best error for each split
     if err < err_best

@@ -16,8 +16,8 @@ y = Trainset(:, 35);                    % target variable
 act_fun = "sigmoid";                    % unit activation
 
 % OPTIMISER SETTINGS
-MaxIterLoop = 25;                       % max iterations for all models
-MaxIterBest = 50;                      % max iterations for best models
+MaxIterLoop = 50;                       % max iterations for all models
+MaxIterBest = 200;                      % max iterations for best models
 
 % LAYERS ------------------------------------------------------------------
 s1 = size(X, 2);
@@ -32,7 +32,7 @@ lmd_range = logspace(-4, 1, 6);
 
 % K-FOLDS -----------------------------------------------------------------
 outer_folds = 15;
-inner_folds = 15;
+inner_folds = 10;
 
 % ERROR METRICS -----------------------------------------------------------
 MAE = zeros(1, outer_folds);
@@ -41,7 +41,6 @@ REP = zeros(1, outer_folds);
 PPMC = zeros(1, outer_folds);
 
 %% MAIN LOOP --------------------------------------------------------------
-fprintf("STARTED ...\n")
 inds = crossvalind('Kfold', n, outer_folds);
 tic
 for k = 1:outer_folds
