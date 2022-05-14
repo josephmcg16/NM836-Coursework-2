@@ -3,21 +3,26 @@ function main()
 
 %% INIT -----------------------------------------------------------
 rng(123);
-
+e
 addpath('Data', 'lib', 'lib/utils')
 
 Trainset = load('Trainset.mat').Trainset;
 
 %% NN parameters ----------------------------------------------------------
-n = size(Trainset, 1);                  % number of samples
+n = size(Trainset, 1);                                                                                                                                                                                                                                                                                   % number of samples
 X = Trainset(:, setdiff(1:end, 35));    % input features
 y = Trainset(:, 35);                    % target variable
 
 act_fun = "sigmoid";                    % unit activation
 
 % OPTIMISER SETTINGS
+<<<<<<< Updated upstream
 MaxIterLoop = 25;                       % max iterations for all models
 MaxIterBest = 50;                      % max iterations for best models
+=======
+MaxIterLoop = 500;                      % max iterations for all models
+MaxIterBest = 500;                      % max iterations for best models
+>>>>>>> Stashed changes
 
 % LAYERS ------------------------------------------------------------------
 s1 = size(X, 2);
@@ -25,10 +30,15 @@ s2_range = [20, 40, 70, 80, 100];
 s3 = size(y, 2);
 
 % HYPERPARAMETERS SEARCH SPACE---------------------------------------------
+% number of hidden layers search space for model selection
+% s1 and s3 are fixed by the dataset
 layers_range = [ones(1, length(s2_range)).*s1; s2_range; ...
                 ones(1, length(s2_range)) .* s3]';
 
-lmd_range = logspace(-4, 1, 6);
+% regularisation parameter logarithmic search space for model selection
+lmd_bounds = [-4, 1];                   % bounds of lmd search space
+NS = 15;                                % num samples of lmd search space
+lmd_range = 10.^(normalize(lhsdesign(NS, 1),"range", lmd_bounds));
 
 % K-FOLDS -----------------------------------------------------------------
 outer_folds = 15;

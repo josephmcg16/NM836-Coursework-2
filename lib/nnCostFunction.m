@@ -18,9 +18,13 @@ I(inds_bias) = 0;
 
 m = length(w_vec) - length(inds_bias);
 
-% activation function
+% nonlinear activation function
 if act_fun == "sigmoid"
     phi = @sigmoid;
+elseif act_fun == "hyptan"
+    phi = @hyptan;
+elseif act_fun == "relu"
+    phi = @relu;
 end
 
 %% FORWARD PROPOGATION ----------------------------------------------------
@@ -29,16 +33,16 @@ a = cell(1, n_layers);
 z = cell(1, n_layers);
 
 % first layer
-b = ones(size(X, 1), 1);  % bias term
-a{1} = [b, X];
+b = ones(size(X, 1), 1);                % bias term
+a{1} = [b, X];                          % add bias
 
 % hidden layer
-z{2} = a{1} * W{1}';  % linear mapping
-[phi_z2, phi_grad_z2] = phi(z{2});
-a{2} = [b, phi_z2];  % activation units
+z{2} = a{1} * W{1}';                    % linear mapping
+[phi_z2, phi_grad_z2] = phi(z{2});      % nonlinear activation
+a{2} = [b, phi_z2];                     % activation units
 % output-layer
-z{3} = a{2} * W{2}';  % linear mapping (identity)
-a{3} = z{3};  % identify function
+z{3} = a{2} * W{2}';                    % linear mapping (identity)
+a{3} = z{3};                            % identify function
 
 % network output
 y_hat = a{3};
@@ -48,28 +52,21 @@ cost = 1/(2*n) * sum((y-y_hat).^2) + ...
        lmd/m * sum(w_vec .* I .^2);
 
 %% BACKWARDS PROPOGATION --------------------------------------------------
-% init
-grad_loss = zeros(n, length(w_vec));
+grad_cost = zeros(length(w_vec), 1);
+
+% output prediction error
+deltaL = y-y_hat;
 
 % loss gradient wrt W{1}
-for i = 1:size(W{1}, 2)
-    for j = 1:size(W{1}, 1)
-        index = size(W{1}, 1) * (i-1) + j;
-        grad_loss(:, index) = - (y-y_hat) .* W{2}(j+1) .* ...
-                              phi_grad_z2(:, j) .* a{1}(:, i);
-    end
-end  
+grad_W1 = (deltaL * W{2}(:, 2:end) .* phi_grad_z2)' * a{1};
+grad_cost(1:length(W{1}(:))) = grad_W1(:);
 
 % loss gradient wrt W{2}
-grad_loss(:, length(W{1}(:))+1:end) = -(y-y_hat) .* a{2};
+grad_W2 = -deltaL' * a{2};
+grad_cost(length(W{1}(:))+1:end) = grad_W2;
 
 % regularised cost gradient
-
-% boolean array, 0 when bias weight, 1 otherwise
-I = true(length(w_vec), 1);
-I(inds_bias) = 0;
-
-grad_cost = (1/n)*sum(grad_loss)' + ...
+grad_cost = (1/n).*grad_cost + ...
             lmd/m .* w_vec .* I;
 
 return
