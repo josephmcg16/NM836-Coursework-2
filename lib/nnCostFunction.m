@@ -49,27 +49,21 @@ cost = 1/(2*n) * sum((y-y_hat).^2) + ...
 
 %% BACKWARDS PROPOGATION --------------------------------------------------
 % init
-grad_loss = zeros(n, length(w_vec));
+grad_cost = zeros(length(w_vec), 1);
+
+% output prediction error
+deltaL = y-y_hat;
 
 % loss gradient wrt W{1}
-for i = 1:size(W{1}, 2)
-    for j = 1:size(W{1}, 1)
-        index = size(W{1}, 1) * (i-1) + j;
-        grad_loss(:, index) = - (y-y_hat) .* W{2}(j+1) .* ...
-                              phi_grad_z2(:, j) .* a{1}(:, i);
-    end
-end  
+grad_W1 = (-deltaL * W{2}(:, 2:end) .* phi_grad_z2)' * a{1};
+grad_cost(1:length(W{1}(:))) = grad_W1(:);
 
 % loss gradient wrt W{2}
-grad_loss(:, length(W{1}(:))+1:end) = -(y-y_hat) .* a{2};
+grad_W2 = -deltaL' * a{2};
+grad_cost(length(W{1}(:))+1:end) = grad_W2;
 
 % regularised cost gradient
-
-% boolean array, 0 when bias weight, 1 otherwise
-I = true(length(w_vec), 1);
-I(inds_bias) = 0;
-
-grad_cost = (1/n)*sum(grad_loss)' + ...
+grad_cost = (1/n).*grad_cost + ...
             lmd/m .* w_vec .* I;
 
 return
