@@ -52,22 +52,14 @@ cost = 1/(2*n) * sum((y-y_hat).^2) + ...
        lmd/m * sum(w_vec .* I .^2);
 
 %% BACKWARDS PROPOGATION --------------------------------------------------
-<<<<<<< Updated upstream
-=======
-%% BACKWARDS PROPOGATION --------------------------------------------------
 % init
->>>>>>> Stashed changes
 grad_cost = zeros(length(w_vec), 1);
 
 % output prediction error
 deltaL = y-y_hat;
 
 % loss gradient wrt W{1}
-<<<<<<< Updated upstream
-grad_W1 = (deltaL * W{2}(:, 2:end) .* phi_grad_z2)' * a{1};
-=======
 grad_W1 = (-deltaL * W{2}(:, 2:end) .* phi_grad_z2)' * a{1};
->>>>>>> Stashed changes
 grad_cost(1:length(W{1}(:))) = grad_W1(:);
 
 % loss gradient wrt W{2}
