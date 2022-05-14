@@ -17,7 +17,7 @@ act_fun = "sigmoid";                    % unit activation
 
 % OPTIMISER SETTINGS
 MaxIterLoop = 50;                       % max iterations for all models
-MaxIterBest = 200;                      % max iterations for best models
+MaxIterBest = 100;                      % max iterations for best models
 
 % LAYERS ------------------------------------------------------------------
 s1 = size(X, 2);
@@ -25,23 +25,29 @@ s2_range = [20, 40, 70, 80, 100];
 s3 = size(y, 2);
 
 % HYPERPARAMETERS SEARCH SPACE---------------------------------------------
+% number of hidden layers search space for model selection
+% s1 and s3 are fixed by the dataset
 layers_range = [ones(1, length(s2_range)).*s1; s2_range; ...
                 ones(1, length(s2_range)) .* s3]';
 
-lmd_range = logspace(-4, 1, 6);
+% regularisation parameter logarithmic search space for model selection
+lmd_bounds = [-4, 1];                                        % bounds of lmd search space
+NS = 15;                                % num samples of lmd search space
+lmd_range = 10.^(normalize(lhsdesign(NS, 1),"range", lmd_bounds));
 
 % K-FOLDS -----------------------------------------------------------------
 outer_folds = 15;
-inner_folds = 10;
+inner_folds = 15;
 
-% ERROR METRICS -----------------------------------------------------------
+%% MAIN LOOP --------------------------------------------------------------
+% init
 MAE = zeros(1, outer_folds);
 MAPE = zeros(1, outer_folds);
 REP = zeros(1, outer_folds);
 PPMC = zeros(1, outer_folds);
 
-%% MAIN LOOP --------------------------------------------------------------
 inds = crossvalind('Kfold', n, outer_folds);
+
 tic
 for k = 1:outer_folds
     % train-test split
@@ -91,6 +97,6 @@ for k = 1:outer_folds
             k, MAE(k), MAPE(k), REP(k), PPMC(k));
     toc
 end
-fprintf("\nComplete. Saved to '/checkpoints' dir...\n")
+fprintf("\nComplete. Models saved to '/checkpoints' dir...\n")
 
 return

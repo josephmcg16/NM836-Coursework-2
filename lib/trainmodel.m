@@ -40,7 +40,6 @@ err_best = +inf;
 for i = 1:size(DOE, 1)
     lmd = DOE(i, 1);
     layers = DOE(i, 2:end);
-
     err = 0;
     for j = 1:kfolds
         % learning and validation split -----------------------------------
@@ -63,7 +62,7 @@ for i = 1:size(DOE, 1)
         cost_func = @(w) nnCostFunction(w, Xle, yle, lmd, act_fun, layers);
 
         % optimise weights ------------------------------------------------
-        [w_vec_opt, ~, ~] = fmincg(cost_func,w_vec, options);
+        w_vec_opt = fmincg(cost_func,w_vec, options);
         W_opt = reshape_weights_vector(w_vec_opt, layers);
 
         y_hat = predict(Xva, W_opt, act_fun, layers);
