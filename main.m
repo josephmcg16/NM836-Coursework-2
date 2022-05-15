@@ -31,7 +31,7 @@ layers_range = [ones(1, length(s2_range)).*s1; s2_range; ...
                 ones(1, length(s2_range)) .* s3]';
 
 % regularisation parameter logarithmic search space for model selection
-lmd_bounds = [-4, 1];                                        % bounds of lmd search space
+lmd_bounds = [-4, 1];                   % bounds of lmd search space
 NS = 15;                                % num samples of lmd search space
 lmd_range = 10.^(normalize(lhsdesign(NS, 1),"range", lmd_bounds));
 
@@ -72,7 +72,7 @@ for k = 1:outer_folds
     [ytr, y_centerValue, y_scaleValue] = normalize(ytr,"range");
     
     % NETWORK PREDICTION --------------------------------------------------
-    Xtest = (Xtest - X_centerValue) ./ X_scaleValue;  % same scaling as tr
+    Xtest = (Xtest - X_centerValue) ./ X_scaleValue;    % tr scaling
     y_hat = predict(Xtest, W_opt, act_fun, layers_best);
     
     % DE-NORMALISE --------------------------------------------------------

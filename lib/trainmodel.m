@@ -34,6 +34,10 @@ options.MaxIter = MaxIterLoop;  % max iterations for each fmincg call
 %% HYPERPARAMETERS DOE ----------------------------------------------------
 DOE = hyperparams_doe(lmd_range, layers_range);
 
+%% NORMALIZE TRAINING DATA in range (0, 1)
+Xtr = normalize(Xtr,"range");
+ytr = normalize(ytr,"range");
+
 %% MAIN LOOP -------------------------------------------------------------
 inds = crossvalind('Kfold', size(Xtr,1), kfolds);
 err_best = +inf;
@@ -52,10 +56,6 @@ for i = 1:size(DOE, 1)
         yle = ytr(le_inds);
         yva = ytr(va_inds);
         
-        % normalize data in the range (0, 1) ------------------------------
-        Xle = normalize(Xle,"range");
-        [yle,y_centerValue,y_scaleValue] = normalize(yle,"range");
-        
         % init cost function-----------------------------------------------
         [~, w_vec] = weights_init(layers);
 
@@ -64,9 +64,9 @@ for i = 1:size(DOE, 1)
         % optimise weights ------------------------------------------------
         w_vec_opt = fmincg(cost_func,w_vec, options);
         W_opt = reshape_weights_vector(w_vec_opt, layers);
-
+        
+        % network prediction ----------------------------------------------
         y_hat = predict(Xva, W_opt, act_fun, layers);
-        y_hat = y_hat * y_scaleValue + y_centerValue;  % denormalize
         
         % aggregate error for each leaning / validation split--------------
         err = err + mse(y_hat, yva);
@@ -85,10 +85,6 @@ for i = 1:size(DOE, 1)
 end
 
 %% TRAIN BEST MODEL -------------------------------------------------------
-% normalize data in the range (0, 1) --------------------------------------
-Xtr = normalize(Xtr,"range");
-ytr = normalize(ytr,"range");
-
 % init cost function ------------------------------------------------------
 [~, w_vec] = weights_init(layers_best);
         
